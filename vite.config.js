@@ -3,31 +3,17 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: process.env.VITE_BASE || "/",
-  build: {
-    chunkSizeWarningLimit: 650,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('html2canvas') || id.includes('jspdf')) return 'pdf-export'
-          if (id.includes('node_modules')) return 'vendor'
-        },
-      },
-    },
-  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'SHIL Solar Toolkit',
-        short_name: 'SHIL',
-        description: 'سامانه محاسبات پروژه‌های خورشیدی',
-        theme_color: '#0b1e3c',
-        background_color: '#0b1e3c',
-        display: 'standalone',
+        name: 'SHIL Solar Design Suite',
+        short_name: 'SHIL Solar',
         start_url: '/',
+        display: 'standalone',
+        background_color: '#0b1d2a',
+        theme_color: '#0b1d2a',
         icons: [
           {
             src: '/icons/icon-192.png',
