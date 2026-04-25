@@ -14,6 +14,7 @@ import {
   HYBRID_MODES,
 } from "../domain/models/project";
 import { Field } from "../shared/components/Field";
+import { CitySearch } from "../shared/components/CitySearch";
 import { EquipmentRepository } from "../data/repositories/EquipmentRepository";
 import { PUBLIC_ASSETS } from "../shared/constants/publicAssets";
 
@@ -24,7 +25,19 @@ function StepProjectInfo() {
     <div className="form-grid two-cols">
       <Field label="عنوان پروژه"><input value={form.projectTitle} onChange={(e) => updateForm({ projectTitle: e.target.value })} /></Field>
       <Field label="نام کارفرما"><input value={form.clientName} onChange={(e) => updateForm({ clientName: e.target.value })} /></Field>
-      <Field label="شهر"><input value={form.city} onChange={(e) => updateForm({ city: e.target.value })} /></Field>
+      <Field label="شهر" hint="با انتخاب شهر، داده‌های اقلیمی پایه به صورت خودکار در فرم اعمال می‌شود.">
+        <CitySearch
+          value={form.city}
+          onSelect={(city) => updateForm({
+            city: city.name,
+            sunHours: city.sunHours,
+            averageTemperature: city.averageTemperature,
+            minTemperature: city.minTemperature,
+            maxTemperature: city.maxTemperature,
+            altitude: city.altitude,
+          })}
+        />
+      </Field>
       <Field label="حالت طراحی">
         <select value={form.modeType} onChange={(e) => updateForm({ modeType: e.target.value })}>
           <option value="quick">Quick</option><option value="advanced">Advanced</option>

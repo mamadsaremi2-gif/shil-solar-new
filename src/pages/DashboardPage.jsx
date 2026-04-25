@@ -1,5 +1,7 @@
 import { useProjectStore } from "../app/store/projectStore";
 import { PUBLIC_ASSETS } from "../shared/constants/publicAssets";
+import { ShareActions } from "../shared/components/ShareActions";
+import { CONTACT_LINKS } from "../shared/constants/contactLinks";
 
 function statusLabel(status) {
   switch (status) {
@@ -80,6 +82,7 @@ export function DashboardPage() {
           <div className="dashboard-hero-xl__actions">
             <button className="btn btn--primary" onClick={startNewProject}>+ پروژه جدید</button>
             <button className="btn btn--ghost" onClick={() => openEquipmentLibrary("dashboard")}>کتابخانه تجهیزات</button>
+            <button className="btn btn--ghost" onClick={() => openContact("dashboard")}>ارتباط مستقیم</button>
           </div>
         </div>
       </section>
@@ -134,6 +137,19 @@ export function DashboardPage() {
             <QuickAction title="انتخاب اینورتر" icon="▣" onClick={() => openEquipmentLibrary("dashboard")} />
             <QuickAction title="کتابخانه تجهیزات" icon="📦" onClick={() => openEquipmentLibrary("dashboard")} />
             <QuickAction title="گزارش مهندسی" icon="📄" onClick={startNewProject} />
+          </div>
+        </section>
+
+        <section className="panel share-panel">
+          <div className="panel__header">
+            <h2>ارسال لینک برنامه</h2>
+          </div>
+          <p className="section-note">لینک برنامه را برای مشتری یا همکار از طریق پیامک، ایمیل، Gmail، واتساپ یا هر برنامه نصب‌شده روی موبایل ارسال کنید.</p>
+          <ShareActions title="SHIL Solar Design Suite" text="لینک برنامه طراحی و محاسبه سیستم خورشیدی SHIL" />
+          <div className="direct-contact-links">
+            <a href={CONTACT_LINKS.website} target="_blank" rel="noreferrer">SHIL.IR</a>
+            <a href={CONTACT_LINKS.instagramShil} target="_blank" rel="noreferrer">Instagram SHIL</a>
+            <a href={CONTACT_LINKS.telegram} target="_blank" rel="noreferrer">Telegram</a>
           </div>
         </section>
 

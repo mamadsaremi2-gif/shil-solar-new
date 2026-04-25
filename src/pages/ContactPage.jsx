@@ -1,5 +1,7 @@
 import { useProjectStore } from "../app/store/projectStore";
 import { PUBLIC_ASSETS } from "../shared/constants/publicAssets";
+import { CONTACT_LINKS } from "../shared/constants/contactLinks";
+import { ShareActions } from "../shared/components/ShareActions";
 
 const CONTACT_ITEMS = [
   {
@@ -8,6 +10,8 @@ const CONTACT_ITEMS = [
     description: "صفحه رسمی محصولات و پروژه‌های SHIL",
     qr: PUBLIC_ASSETS.qr.instagramShil,
     type: "Instagram",
+    url: CONTACT_LINKS.instagramShil,
+    actionLabel: "ورود به اینستاگرام SHIL",
   },
   {
     key: "instagram",
@@ -15,6 +19,8 @@ const CONTACT_ITEMS = [
     description: "آموزش‌ها، نمونه‌کارها و نکات اجرایی",
     qr: PUBLIC_ASSETS.qr.instagram,
     type: "Instagram",
+    url: CONTACT_LINKS.instagramPersonal,
+    actionLabel: "ورود به اینستاگرام",
   },
   {
     key: "telegram",
@@ -22,6 +28,8 @@ const CONTACT_ITEMS = [
     description: "ارتباط سریع و ارسال فایل‌های پروژه",
     qr: PUBLIC_ASSETS.qr.telegram,
     type: "Telegram",
+    url: CONTACT_LINKS.telegram,
+    actionLabel: "ورود به تلگرام",
   },
   {
     key: "whatsapp",
@@ -29,23 +37,31 @@ const CONTACT_ITEMS = [
     description: "هماهنگی سریع و پشتیبانی پروژه",
     qr: PUBLIC_ASSETS.qr.whatsapp,
     type: "WhatsApp",
+    url: CONTACT_LINKS.whatsapp,
+    actionLabel: "ورود به واتساپ",
   },
 ];
+
 
 function ContactCard({ item }) {
   return (
     <article className="contact-card">
-      <div className="contact-card__qr-wrap">
+      <a className="contact-card__qr-wrap" href={item.url} target="_blank" rel="noreferrer" aria-label={item.actionLabel}>
         <img className="contact-card__qr" src={item.qr} alt={`QR ${item.title}`} loading="lazy" />
-      </div>
+      </a>
       <div className="contact-card__body">
         <span className="contact-card__type">{item.type}</span>
         <h3>{item.title}</h3>
         <p>{item.description}</p>
+        <div className="contact-card__actions">
+          <a className="btn btn--primary btn--sm" href={item.url} target="_blank" rel="noreferrer">{item.actionLabel}</a>
+          <a className="btn btn--ghost btn--sm" href={item.qr} target="_blank" rel="noreferrer">مشاهده QR</a>
+        </div>
       </div>
     </article>
   );
 }
+
 
 export function ContactPage() {
   const { goBackFromContact, goDashboard } = useProjectStore();
@@ -68,7 +84,7 @@ export function ContactPage() {
             برای مشاهده محصولات SHIL، ارتباط سریع، دریافت فایل‌ها و هماهنگی پروژه، از مسیرهای زیر استفاده کنید.
           </p>
           <div className="contact-hero__actions">
-            <a className="btn btn--primary" href="https://shil.ir" target="_blank" rel="noreferrer">
+            <a className="btn btn--primary" href={CONTACT_LINKS.website} target="_blank" rel="noreferrer">
               ورود به سایت SHIL.IR
             </a>
             <button className="btn btn--secondary" onClick={goDashboard} type="button">
@@ -84,9 +100,17 @@ export function ContactPage() {
           <h2>SHIL.IR</h2>
           <p>وب‌سایت رسمی برای معرفی محصولات، اطلاعات فنی و مسیرهای ارتباطی.</p>
         </div>
-        <a className="site-link-card" href="https://shil.ir" target="_blank" rel="noreferrer">
+        <a className="site-link-card" href={CONTACT_LINKS.website} target="_blank" rel="noreferrer">
           SHIL.IR
         </a>
+      </section>
+
+      <section className="panel contact-share-panel">
+        <div className="panel__header">
+          <h2>ارسال لینک برنامه</h2>
+        </div>
+        <p className="section-note">لینک برنامه یا صفحه ارتباط را با پیامک، واتساپ، ایمیل، Gmail و برنامه‌های داخلی نصب‌شده روی موبایل ارسال کنید.</p>
+        <ShareActions title="ارتباط با SHIL" text="مسیرهای ارتباطی SHIL و برنامه طراحی سیستم خورشیدی" />
       </section>
 
       <section className="contact-grid">
