@@ -7,6 +7,7 @@ import { SimpleBarChart, SimpleLineChart } from '../features/simulation/componen
 import { EquipmentRepository } from '../data/repositories/EquipmentRepository';
 import { PUBLIC_ASSETS } from '../shared/constants/publicAssets';
 import { ShareActions } from '../shared/components/ShareActions';
+import { IRAN_CITIES } from '../data/seed/iranCities';
 
 function formatSystemType(value) {
   const map = {
@@ -37,6 +38,53 @@ function formatHybridMode(value) {
   };
   return map[value] || '—';
 }
+
+
+function findCityClimate(cityName) {
+  return IRAN_CITIES.find((city) => city.name === cityName) || null;
+}
+
+function ClimateOutputPanel({ form, pv }) {
+  const city = findCityClimate(form.city);
+  const psh = Number(form.sunHours || 0);
+  const avgTemp = Number(form.averageTemperature || 0);
+  const minTemp = Number(form.minTemperature || 0);
+  const maxTemp = Number(form.maxTemperature || 0);
+  const altitude = Number(form.altitude || 0);
+  const solarClass = psh >= 5.7 ? 'عالی' : psh >= 5 ? 'خوب' : psh >= 4.2 ? 'متوسط' : 'کم';
+  const tempNote = maxTemp > 40
+    ? 'دمای بالا باعث افت توان واقعی پنل می‌شود.'
+    : minTemp < -5
+      ? 'دمای پایین باید در کنترل Voc سرد رشته پنل بررسی شود.'
+      : 'شرایط دمایی برای طراحی عمومی مناسب است.';
+
+  return (
+    <section className="panel climate-output-panel">
+      <div className="panel__header">
+        <h2>اطلاعات محیطی شهر انتخابی</h2>
+        <span className="badge">{city ? city.province : 'ورودی دستی'}</span>
+      </div>
+      <div className="climate-metric-grid">
+        <div><span>شهر</span><strong>{form.city || '—'}</strong></div>
+        <div><span>تابش موثر PSH</span><strong>{formatNumber(psh, 1)} h/day</strong></div>
+        <div><span>کلاس تابش</span><strong>{solarClass}</strong></div>
+        <div><span>دمای متوسط</span><strong>{formatNumber(avgTemp)} °C</strong></div>
+        <div><span>حداقل / حداکثر دما</span><strong>{formatNumber(minTemp)} / {formatNumber(maxTemp)} °C</strong></div>
+        <div><span>ارتفاع از سطح دریا</span><strong>{formatNumber(altitude)} m</strong></div>
+        <div><span>ضریب سایه</span><strong>{formatNumber(Number(form.shadingFactor || 0) * 100, 0)} %</strong></div>
+        <div><span>ضریب گردوغبار</span><strong>{formatNumber(Number(form.dustFactor || 0) * 100, 0)} %</strong></div>
+        <div><span>زاویه نصب</span><strong>{formatNumber(form.tiltAngle)}°</strong></div>
+        {pv ? <div><span>PR طراحی</span><strong>{formatNumber(pv.performanceRatio, 2)}</strong></div> : null}
+      </div>
+      <div className="climate-note-list">
+        <div><span>تحلیل دما</span><strong>{tempNote}</strong></div>
+        {pv ? <div><span>تولید روزانه تخمینی</span><strong>{formatNumber(pv.estimatedDailyProductionWh)} Wh</strong></div> : null}
+        {pv ? <div><span>String Voc سرد</span><strong>{formatNumber(pv.stringVocCold)} V</strong></div> : null}
+      </div>
+    </section>
+  );
+}
+
 
 function formatEquipmentLabel(item) {
   if (!item) return 'ورود دستی';
@@ -357,6 +405,12 @@ export function OutputPage() {
             <MetricCard label="افت کابل AC" value={`${formatNumber(cabling.acVoltageDropPercent || 0, 2)} %`} accent="amber" />
           </section>
         </section>
+
+        {summary.systemType !== 'backup' ? (
+          <section className="pdf-page-section report-page">
+            <ClimateOutputPanel form={activeProject.form} pv={pv} />
+          </section>
+        ) : null}
 
         <section className="pdf-page-section report-page">
           <div className="output-grid output-grid--single-export">

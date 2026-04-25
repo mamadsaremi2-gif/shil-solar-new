@@ -1,7 +1,9 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import { DEFAULT_PROJECT_FORM } from "../../domain/models/project";
 import { ProjectRepository } from "../../data/repositories/ProjectRepository";
+import { CloudProjectRepository } from "../../data/repositories/CloudProjectRepository";
 import { runEngineeringDesign } from "../../domain/engine/orchestrator/runEngineeringDesign";
+import { trackEvent } from "../../shared/lib/usageTracker";
 
 const ProjectStoreContext = createContext(null);
 
@@ -121,9 +123,15 @@ export function ProjectStoreProvider({ children }) {
   const actions = {
     goDashboard() {
       setRoute({ name: "dashboard" });
+      trackEvent("open_dashboard");
+    },
+    openAdmin() {
+      setRoute({ name: "admin" });
+      trackEvent("open_admin");
     },
     openEquipmentLibrary(origin = null) {
       setRoute({ name: "equipment", origin: origin ?? route.name });
+      trackEvent("open_equipment_library", { origin: origin ?? route.name });
     },
     goBackFromEquipment() {
       const origin = route.origin === "workspace" ? "workspace" : "dashboard";
@@ -131,6 +139,7 @@ export function ProjectStoreProvider({ children }) {
     },
     openContact(origin = null) {
       setRoute({ name: "contact", origin: origin ?? route.name });
+      trackEvent("open_contact", { origin: origin ?? route.name });
     },
     goBackFromContact() {
       const origin = route.origin === "workspace" ? "workspace" : route.origin === "output" ? "output" : "dashboard";
@@ -140,6 +149,7 @@ export function ProjectStoreProvider({ children }) {
       setActiveProject(createProjectSession());
       setStepIndex(0);
       setRoute({ name: "workspace" });
+      trackEvent("start_new_project");
     },
     updateForm(patch) {
       setActiveProject((prev) => {
@@ -251,6 +261,7 @@ export function ProjectStoreProvider({ children }) {
         syncDraft(next);
         return next;
       });
+      trackEvent("run_calculation", { ok: output.ok, systemType: activeProject.form.systemType, calculationMode: activeProject.form.calculationMode });
       if (output.ok) setRoute({ name: "output" });
       return output;
     },
@@ -364,6 +375,23 @@ export function ProjectStoreProvider({ children }) {
       );
       setStepIndex(0);
       setRoute({ name: "workspace" });
+    },
+    async syncCloudProjects(userId) {
+      if (!CloudProjectRepository.isEnabled()) return { ok: false, message: "Supabase تنظیم نشده است." };
+      try {
+        const cloudItems = await CloudProjectRepository.list();
+        cloudItems.forEach((item) => ProjectRepository.upsert(item));
+        const localItems = ProjectRepository.list();
+        for (const item of localItems) {
+          await CloudProjectRepository.upsert(item, userId);
+        }
+        refreshProjects();
+        trackEvent("sync_cloud_projects", { count: localItems.length });
+        return { ok: true };
+      } catch (error) {
+        console.error("Cloud sync failed", error);
+        return { ok: false, message: error.message };
+      }
     },
     deleteProject(projectId) {
       ProjectRepository.remove(projectId);

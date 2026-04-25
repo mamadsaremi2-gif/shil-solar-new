@@ -1,6 +1,6 @@
 {
-  "name": "SHIL Solar Toolkit",
-  "short_name": "SHIL",
+  "name": "SHIL SOLAR",
+  "short_name": "SHIL SOLAR",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b1e3c",
@@ -16,5 +16,6 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "description": "SHIL SOLAR engineering PWA for solar, hybrid, grid-tie, and sanverter battery design"
 }

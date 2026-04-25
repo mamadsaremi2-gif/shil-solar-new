@@ -17,6 +17,55 @@ import { Field } from "../shared/components/Field";
 import { CitySearch } from "../shared/components/CitySearch";
 import { EquipmentRepository } from "../data/repositories/EquipmentRepository";
 import { PUBLIC_ASSETS } from "../shared/constants/publicAssets";
+import { getSmartPresetsForSystem } from "../data/seed/smartProjectPresets";
+import { IRAN_CITIES } from "../data/seed/iranCities";
+
+function getCityClimate(cityName) {
+  return IRAN_CITIES.find((city) => city.name === cityName) || null;
+}
+
+function ClimateInfoCard({ form }) {
+  const city = getCityClimate(form.city);
+  const temperatureRange = `${Number(form.minTemperature ?? 0)} تا ${Number(form.maxTemperature ?? 0)} °C`;
+  const altitude = Number(form.altitude ?? 0);
+  const psh = Number(form.sunHours ?? 0);
+  const tempImpact = Number(form.maxTemperature ?? 25) > 40
+    ? "دمای بالا؛ افت توان پنل در نظر گرفته شود"
+    : Number(form.minTemperature ?? 0) < -5
+      ? "دمای پایین؛ Voc سرد پنل کنترل شود"
+      : "شرایط دمایی عادی برای طراحی";
+  const solarClass = psh >= 5.7 ? "عالی" : psh >= 5 ? "خوب" : psh >= 4.2 ? "متوسط" : "کم";
+  const altitudeNote = altitude > 1500
+    ? "ارتفاع زیاد؛ تهویه اینورتر و تجهیزات مهم است"
+    : altitude < 100
+      ? "ارتفاع پایین؛ شرایط نصب معمولی"
+      : "ارتفاع مناسب برای طراحی عمومی";
+
+  return (
+    <section className="panel panel--soft climate-info-card">
+      <div className="panel__header">
+        <div>
+          <h3>اطلاعات محیطی شهر انتخابی</h3>
+          <p className="section-note">این اطلاعات برای سیستم‌های دارای پنل خورشیدی در محاسبه تولید، دمای پنل، Voc سرد و شرایط نصب استفاده می‌شود.</p>
+        </div>
+        <span className="badge">{city ? city.province : "ورودی دستی"}</span>
+      </div>
+      <div className="climate-metric-grid">
+        <div><span>شهر</span><strong>{form.city || "—"}</strong></div>
+        <div><span>تابش موثر PSH</span><strong>{psh.toFixed(1)} h/day</strong></div>
+        <div><span>کلاس تابش</span><strong>{solarClass}</strong></div>
+        <div><span>دمای متوسط</span><strong>{Number(form.averageTemperature ?? 0).toFixed(0)} °C</strong></div>
+        <div><span>بازه دمایی</span><strong>{temperatureRange}</strong></div>
+        <div><span>ارتفاع</span><strong>{altitude.toFixed(0)} m</strong></div>
+      </div>
+      <div className="climate-note-list">
+        <div><span>اثر دما</span><strong>{tempImpact}</strong></div>
+        <div><span>اثر ارتفاع</span><strong>{altitudeNote}</strong></div>
+      </div>
+    </section>
+  );
+}
+
 
 function StepProjectInfo() {
   const { activeProject, updateForm } = useProjectStore();
@@ -125,12 +174,100 @@ function LoadProfileEditor() {
   );
 }
 
+
+function SmartPresetPicker() {
+  const { activeProject, updateForm } = useProjectStore();
+  const [filter, setFilter] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const form = activeProject.form;
+
+  const presets = useMemo(() => {
+    const base = getSmartPresetsForSystem(form.systemType);
+    const q = filter.trim();
+    if (!q) return base;
+    return base.filter((preset) => {
+      const haystack = `${preset.title} ${preset.category} ${preset.bestFor} ${preset.summary} ${(preset.tags || []).join(" ")}`;
+      return haystack.includes(q);
+    });
+  }, [filter, form.systemType]);
+
+  const visiblePresets = expanded ? presets : presets.slice(0, 4);
+
+  function applyPreset(preset) {
+    const normalizedItems = (preset.patch.loadItems || []).map((item) => ({
+      id: crypto.randomUUID(),
+      qty: 1,
+      hours: 1,
+      powerFactor: 0.95,
+      coincidenceFactor: 1,
+      loadType: "mixed",
+      surgeFactor: 1,
+      ...item,
+    }));
+
+    const patch = {
+      ...preset.patch,
+      projectTitle: form.projectTitle && form.projectTitle !== "پروژه جدید Solar Design Suite" ? form.projectTitle : preset.patch.projectTitle,
+    };
+
+    if (preset.patch.loadItems) patch.loadItems = normalizedItems;
+
+    updateForm(patch);
+    window.alert(`سناریوی آماده «${preset.title}» روی فرم اعمال شد. می‌توانید مقادیر را قبل از محاسبه ویرایش کنید.`);
+  }
+
+  return (
+    <section className="panel panel--soft smart-library-panel">
+      <div className="panel__header">
+        <div>
+          <h3>کتابخانه هوشمند سناریوهای آماده</h3>
+          <p className="section-note">اگر مصرف مشتری شبیه یکی از موارد زیر است، انتخاب کنید تا اطلاعات فرم سریع تکمیل شود.</p>
+        </div>
+        <span className="badge">{presets.length} سناریو</span>
+      </div>
+
+      <input
+        className="search-input"
+        value={filter}
+        onChange={(event) => setFilter(event.target.value)}
+        placeholder="جستجو بین سناریوها: ویلا، پمپ، مغازه، دفتر، آفگرید..."
+      />
+
+      <div className="smart-preset-grid">
+        {visiblePresets.map((preset) => (
+          <article key={preset.id} className="smart-preset-card">
+            <div className="smart-preset-card__head">
+              <strong>{preset.title}</strong>
+              <span>{preset.category}</span>
+            </div>
+            <p>{preset.bestFor}</p>
+            <div className="smart-preset-tags">
+              {(preset.tags || []).map((tag) => <span key={tag}>{tag}</span>)}
+            </div>
+            <button className="btn btn--primary btn--sm" type="button" onClick={() => applyPreset(preset)}>
+              اعمال روی فرم
+            </button>
+          </article>
+        ))}
+      </div>
+
+      {presets.length > 4 ? (
+        <button className="btn btn--ghost btn--sm" type="button" onClick={() => setExpanded((prev) => !prev)}>
+          {expanded ? "نمایش کمتر" : "نمایش همه سناریوها"}
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+
 function StepLoads() {
   const { activeProject, updateForm, updateLoadItem, addLoadItem, removeLoadItem } = useProjectStore();
   const form = activeProject.form;
   if (form.calculationMode === "loads") {
     return (
       <div className="stack-lg">
+        <SmartPresetPicker />
         <div className="table-like">
           {form.loadItems.map((item) => (
             <div key={item.id} className="load-card-grid">
@@ -154,28 +291,37 @@ function StepLoads() {
   }
 
   if (form.calculationMode === "load_profile") {
-    return <LoadProfileEditor />;
+    return (
+      <div className="stack-lg">
+        <SmartPresetPicker />
+        <LoadProfileEditor />
+      </div>
+    );
   }
 
   return (
-    <div className="form-grid two-cols">
-      {form.calculationMode === "current" ? (
-        <Field label="جریان کل (A)"><input type="number" value={form.current} onChange={(e) => updateForm({ current: e.target.value })} /></Field>
-      ) : null}
-      {form.calculationMode === "power" ? (
-        <Field label="توان کل (W)"><input type="number" value={form.loadPower} onChange={(e) => updateForm({ loadPower: e.target.value })} /></Field>
-      ) : null}
-      {form.calculationMode === "daily_energy" ? (
-        <Field label="انرژی روزانه (kWh/day)"><input type="number" value={form.dailyEnergyKwh} onChange={(e) => updateForm({ dailyEnergyKwh: e.target.value })} /></Field>
-      ) : null}
-      <Field label="ولتاژ بار (V)"><input type="number" value={form.loadVoltage} onChange={(e) => updateForm({ loadVoltage: e.target.value })} /></Field>
-      <Field label="ضریب توان PF"><input type="number" step="0.01" value={form.powerFactor} onChange={(e) => updateForm({ powerFactor: e.target.value })} /></Field>
-      <Field label="زمان بکاپ / مرجع (h)"><input type="number" value={form.backupHours} onChange={(e) => updateForm({ backupHours: e.target.value })} /></Field>
-      {form.calculationMode === "daily_energy" ? (
-        <Field label="Peak Factor"><input type="number" step="0.1" value={form.peakFactor} onChange={(e) => updateForm({ peakFactor: e.target.value })} /></Field>
-      ) : null}
+    <div className="stack-lg">
+      <SmartPresetPicker />
+      <div className="form-grid two-cols">
+        {form.calculationMode === "current" ? (
+          <Field label="جریان کل (A)"><input type="number" value={form.current} onChange={(e) => updateForm({ current: e.target.value })} /></Field>
+        ) : null}
+        {form.calculationMode === "power" ? (
+          <Field label="توان کل (W)"><input type="number" value={form.loadPower} onChange={(e) => updateForm({ loadPower: e.target.value })} /></Field>
+        ) : null}
+        {form.calculationMode === "daily_energy" ? (
+          <Field label="انرژی روزانه (kWh/day)"><input type="number" value={form.dailyEnergyKwh} onChange={(e) => updateForm({ dailyEnergyKwh: e.target.value })} /></Field>
+        ) : null}
+        <Field label="ولتاژ بار (V)"><input type="number" value={form.loadVoltage} onChange={(e) => updateForm({ loadVoltage: e.target.value })} /></Field>
+        <Field label="ضریب توان PF"><input type="number" step="0.01" value={form.powerFactor} onChange={(e) => updateForm({ powerFactor: e.target.value })} /></Field>
+        <Field label={form.systemType === "backup" ? "ساعت برق اضطراری موردنیاز مشتری" : "زمان بکاپ / مرجع (h)"}><input type="number" step="0.5" value={form.backupHours} onChange={(e) => updateForm({ backupHours: e.target.value })} /></Field>
+        {form.calculationMode === "daily_energy" ? (
+          <Field label="Peak Factor"><input type="number" step="0.1" value={form.peakFactor} onChange={(e) => updateForm({ peakFactor: e.target.value })} /></Field>
+        ) : null}
+      </div>
     </div>
   );
+
 }
 
 function StepSite() {
@@ -192,18 +338,166 @@ function StepSite() {
   }
 
   return (
-    <div className="form-grid two-cols">
-      <Field label="ساعات تابش موثر"><input type="number" value={form.sunHours} onChange={(e) => updateForm({ sunHours: e.target.value })} /></Field>
-      <Field label="دمای متوسط (°C)"><input type="number" value={form.averageTemperature} onChange={(e) => updateForm({ averageTemperature: e.target.value })} /></Field>
-      <Field label="حداقل دما (°C)"><input type="number" value={form.minTemperature} onChange={(e) => updateForm({ minTemperature: e.target.value })} /></Field>
-      <Field label="حداکثر دما (°C)"><input type="number" value={form.maxTemperature} onChange={(e) => updateForm({ maxTemperature: e.target.value })} /></Field>
-      <Field label="ارتفاع از سطح دریا (m)"><input type="number" value={form.altitude} onChange={(e) => updateForm({ altitude: e.target.value })} /></Field>
-      <Field label="ضریب سایه"><input type="number" step="0.01" value={form.shadingFactor} onChange={(e) => updateForm({ shadingFactor: e.target.value })} /></Field>
-      <Field label="ضریب گردوغبار"><input type="number" step="0.01" value={form.dustFactor} onChange={(e) => updateForm({ dustFactor: e.target.value })} /></Field>
-      <Field label="زاویه نصب"><input type="number" value={form.tiltAngle} onChange={(e) => updateForm({ tiltAngle: e.target.value })} /></Field>
+    <div className="stack-lg">
+      <ClimateInfoCard form={form} />
+      <div className="form-grid two-cols">
+        <Field label="ساعات تابش موثر شهر (PSH)">
+          <input type="number" value={form.sunHours} onChange={(e) => updateForm({ sunHours: e.target.value })} />
+        </Field>
+        <Field label="دمای متوسط شهر (°C)">
+          <input type="number" value={form.averageTemperature} onChange={(e) => updateForm({ averageTemperature: e.target.value })} />
+        </Field>
+        <Field label="حداقل دما برای Voc سرد (°C)">
+          <input type="number" value={form.minTemperature} onChange={(e) => updateForm({ minTemperature: e.target.value })} />
+        </Field>
+        <Field label="حداکثر دما برای افت توان پنل (°C)">
+          <input type="number" value={form.maxTemperature} onChange={(e) => updateForm({ maxTemperature: e.target.value })} />
+        </Field>
+        <Field label="ارتفاع از سطح دریا (m)">
+          <input type="number" value={form.altitude} onChange={(e) => updateForm({ altitude: e.target.value })} />
+        </Field>
+        <Field label="ضریب سایه">
+          <input type="number" step="0.01" value={form.shadingFactor} onChange={(e) => updateForm({ shadingFactor: e.target.value })} />
+        </Field>
+        <Field label="ضریب گردوغبار">
+          <input type="number" step="0.01" value={form.dustFactor} onChange={(e) => updateForm({ dustFactor: e.target.value })} />
+        </Field>
+        <Field label="زاویه نصب">
+          <input type="number" value={form.tiltAngle} onChange={(e) => updateForm({ tiltAngle: e.target.value })} />
+        </Field>
+      </div>
     </div>
   );
 }
+
+
+function estimateUpsRuntime(form) {
+  const num = (value, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  let connectedPowerW = 0;
+  let demandPowerW = 0;
+  let surgePowerW = 0;
+
+  if (form.calculationMode === "loads" && Array.isArray(form.loadItems) && form.loadItems.length) {
+    form.loadItems.forEach((item) => {
+      const qty = num(item.qty, 1);
+      const power = num(item.power, 0);
+      const pf = Math.max(num(item.powerFactor, 1), 0.1);
+      const coincidence = num(item.coincidenceFactor, 1);
+      const surge = num(item.surgeFactor, form.surgeFactor || 1);
+      const itemPower = qty * power / pf;
+      connectedPowerW += itemPower;
+      demandPowerW += itemPower * coincidence;
+      surgePowerW += itemPower * surge;
+    });
+  } else if (form.calculationMode === "current") {
+    demandPowerW = num(form.current) * num(form.loadVoltage, 220) * num(form.powerFactor, 0.95);
+    connectedPowerW = demandPowerW;
+    surgePowerW = demandPowerW * num(form.surgeFactor, 1.5);
+  } else if (form.calculationMode === "daily_energy" || form.calculationMode === "load_profile") {
+    const energyWh = num(form.dailyEnergyKwh) * 1000;
+    demandPowerW = Math.max(energyWh / Math.max(num(form.backupHours, 1), 1), energyWh / 24);
+    connectedPowerW = demandPowerW;
+    surgePowerW = demandPowerW * num(form.peakFactor, 2);
+  } else {
+    demandPowerW = num(form.loadPower);
+    connectedPowerW = demandPowerW;
+    surgePowerW = demandPowerW * num(form.surgeFactor, 1.5);
+  }
+
+  demandPowerW = Math.max(demandPowerW, 1);
+  const systemVoltage = num(form.systemVoltage, 48);
+  const batteryUnitVoltage = num(form.batteryUnitVoltage, 12);
+  const batteryUnitAh = num(form.batteryUnitAh, 100);
+  const dod = Math.min(Math.max(num(form.dod, 0.8), 0.1), 1);
+  const inverterEfficiency = Math.min(Math.max(num(form.inverterEfficiency, 0.9), 0.1), 1);
+  const batteryEfficiency = Math.min(Math.max(num(form.batteryRoundTripEfficiency, 0.9), 0.1), 1);
+
+  const seriesCount = Math.max(1, Math.ceil(systemVoltage / Math.max(batteryUnitVoltage, 1)));
+  const requiredAhForDesired = (demandPowerW * num(form.backupHours, 1)) / (systemVoltage * inverterEfficiency * dod * batteryEfficiency);
+  const parallelCount = Math.max(1, Math.ceil(requiredAhForDesired / Math.max(batteryUnitAh, 1)));
+  const totalCount = seriesCount * parallelCount;
+
+  const bankAh = parallelCount * batteryUnitAh;
+  const usableEnergyWh = bankAh * systemVoltage * dod * inverterEfficiency * batteryEfficiency;
+  const realBackupHours = usableEnergyWh / demandPowerW;
+
+  return {
+    connectedPowerW,
+    demandPowerW,
+    surgePowerW,
+    desiredBackupHours: num(form.backupHours, 1),
+    seriesCount,
+    parallelCount,
+    totalCount,
+    bankAh,
+    usableEnergyWh,
+    realBackupHours,
+  };
+}
+
+function UpsRuntimePreview() {
+  const { activeProject, updateForm } = useProjectStore();
+  const form = activeProject.form;
+  const estimate = useMemo(() => estimateUpsRuntime(form), [form]);
+
+  if (form.systemType !== "backup") return null;
+
+  const statusClass = estimate.realBackupHours + 0.05 >= estimate.desiredBackupHours ? "ups-runtime-card--ok" : "ups-runtime-card--warn";
+  const statusText = estimate.realBackupHours + 0.05 >= estimate.desiredBackupHours
+    ? "زمان برق اضطراری این ترکیب کافی است"
+    : "زمان برق اضطراری کمتر از نیاز مشتری است";
+
+  return (
+    <section className={`panel panel--soft ups-runtime-card ${statusClass}`}>
+      <div className="panel__header">
+        <div>
+          <h3>محاسبه برق اضطراری سانورتر و باطری</h3>
+          <p className="section-note">اول ساعت موردنیاز مشتری را وارد کنید؛ سپس با تغییر سانورتر، ولتاژ و ظرفیت باطری، زمان واقعی برق اضطراری به‌صورت زنده نمایش داده می‌شود.</p>
+        </div>
+        <span className="badge">{statusText}</span>
+      </div>
+
+      <div className="form-grid two-cols">
+        <Field label="ساعت برق اضطراری موردنیاز مشتری">
+          <input type="number" step="0.5" min="0.5" value={form.backupHours} onChange={(e) => updateForm({ backupHours: e.target.value })} />
+        </Field>
+        <Field label="توان بار محاسبه‌شده">
+          <input readOnly value={`${estimate.demandPowerW.toFixed(0)} W`} />
+        </Field>
+      </div>
+
+      <div className="metric-grid metric-grid--tight">
+        <div className="metric-card">
+          <div className="metric-card__label">برق اضطراری واقعی</div>
+          <div className="metric-card__value">{estimate.realBackupHours.toFixed(1)} h</div>
+        </div>
+        <div className="metric-card metric-card--purple">
+          <div className="metric-card__label">آرایش باطری</div>
+          <div className="metric-card__value">{estimate.seriesCount}S × {estimate.parallelCount}P</div>
+        </div>
+        <div className="metric-card metric-card--green">
+          <div className="metric-card__label">تعداد کل باطری</div>
+          <div className="metric-card__value">{estimate.totalCount}</div>
+        </div>
+        <div className="metric-card metric-card--amber">
+          <div className="metric-card__label">انرژی قابل استفاده</div>
+          <div className="metric-card__value">{(estimate.usableEnergyWh / 1000).toFixed(1)} kWh</div>
+        </div>
+      </div>
+
+      <div className="summary-list ups-runtime-summary">
+        <div><span>نیاز مشتری</span><strong>{estimate.desiredBackupHours.toFixed(1)} ساعت</strong></div>
+        <div><span>ظرفیت بانک</span><strong>{estimate.bankAh.toFixed(0)}Ah @ {form.systemVoltage}V</strong></div>
+        <div><span>توان پیک تقریبی</span><strong>{estimate.surgePowerW.toFixed(0)} W</strong></div>
+      </div>
+    </section>
+  );
+}
+
 
 function EquipmentSelector({ category, label, selectedId, onSelect, disabled = false }) {
   const [query, setQuery] = useState("");
@@ -310,6 +604,8 @@ function StepSystemConfig() {
           ) : null}
         </div>
       </section>
+
+      <UpsRuntimePreview />
 
       <div className="form-grid two-cols">
         <Field label="ولتاژ سیستم">

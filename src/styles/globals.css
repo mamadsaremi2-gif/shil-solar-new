@@ -1798,3 +1798,309 @@ select { cursor: pointer; }
     margin: 0 auto;
   }
 }
+
+
+/* Smart preset library */
+.smart-library-panel {
+  background:
+    radial-gradient(circle at top right, rgba(59,130,246,0.18), transparent 34%),
+    rgba(15,27,47,0.9);
+}
+.smart-library-panel .panel__header {
+  align-items: flex-start;
+}
+.smart-library-panel .section-note {
+  margin: 6px 0 0;
+}
+.smart-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+.smart-preset-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(148,163,184,0.18);
+  background: rgba(255,255,255,0.055);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.16);
+}
+.smart-preset-card__head {
+  display: grid;
+  gap: 6px;
+}
+.smart-preset-card__head strong {
+  color: #fff;
+  font-size: 17px;
+}
+.smart-preset-card__head span {
+  width: max-content;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #bfdbfe;
+  background: rgba(59,130,246,0.14);
+  font-size: 12px;
+}
+.smart-preset-card p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.8;
+  font-size: 14px;
+}
+.smart-preset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.smart-preset-tags span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #dbeafe;
+  background: rgba(255,255,255,0.08);
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .smart-preset-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* UPS runtime preview for Sanverter + Battery mode */
+.ups-runtime-card {
+  border-color: rgba(96,165,250,0.28);
+  background:
+    radial-gradient(circle at top left, rgba(59,130,246,0.22), transparent 38%),
+    rgba(15,27,47,0.92);
+}
+.ups-runtime-card--ok {
+  border-color: rgba(16,185,129,0.35);
+}
+.ups-runtime-card--warn {
+  border-color: rgba(245,158,11,0.45);
+}
+.ups-runtime-card--warn .badge {
+  color: #fde68a;
+  background: rgba(245,158,11,0.16);
+}
+.ups-runtime-summary {
+  margin-top: 16px;
+}
+.ups-runtime-card input[readonly] {
+  background: rgba(255,255,255,0.82);
+  color: #0f172a;
+  font-weight: 800;
+}
+@media (max-width: 640px) {
+  .ups-runtime-card .metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* City climate information for solar-panel design paths */
+.climate-info-card,
+.climate-output-panel {
+  background:
+    radial-gradient(circle at top right, rgba(16,185,129,0.16), transparent 36%),
+    rgba(15,27,47,0.92);
+  border-color: rgba(45,212,191,0.22);
+}
+.climate-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.climate-metric-grid div,
+.climate-note-list div {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.065);
+  border: 1px solid rgba(255,255,255,0.09);
+}
+.climate-metric-grid span,
+.climate-note-list span {
+  color: #aab7cb;
+  font-size: 12px;
+}
+.climate-metric-grid strong,
+.climate-note-list strong {
+  color: #fff;
+  font-size: 15px;
+}
+.climate-note-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+@media (max-width: 640px) {
+  .climate-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* SHIL SOLAR Auth + Admin */
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(59,130,246,.28), transparent 38%),
+    radial-gradient(circle at bottom left, rgba(139,92,246,.22), transparent 34%),
+    linear-gradient(180deg, #08111f, #0d1728);
+}
+.auth-card {
+  width: min(620px, 100%);
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(15,27,47,.94);
+  box-shadow: 0 30px 90px rgba(0,0,0,.35);
+  padding: 26px;
+}
+.auth-card--center {
+  text-align: center;
+  display: grid;
+  gap: 18px;
+}
+.auth-brand {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.auth-brand strong {
+  color: white;
+  font-size: clamp(30px, 5vw, 48px);
+  letter-spacing: 1px;
+}
+.auth-brand span,
+.auth-card p {
+  color: #aab7cb;
+  line-height: 1.9;
+}
+.auth-warning {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(245,158,11,.14);
+  color: #fde68a;
+  margin-bottom: 14px;
+}
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.auth-tabs button {
+  min-height: 44px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: #dbeafe;
+  cursor: pointer;
+}
+.auth-tabs button.is-active {
+  background: linear-gradient(135deg, #3b82f6, #7c3aed);
+  color: white;
+}
+.auth-form {
+  display: grid;
+  gap: 13px;
+}
+.auth-form label {
+  display: grid;
+  gap: 7px;
+  color: #dbeafe;
+}
+.auth-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+.auth-status {
+  margin: 0;
+  color: #bfdbfe;
+}
+.auth-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.user-access-panel {
+  margin-top: 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.user-access-panel h2 {
+  margin: 6px 0;
+}
+.user-access-panel p {
+  margin: 0;
+  color: #aab7cb;
+  line-height: 1.8;
+}
+.user-access-panel__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-message {
+  color: #fde68a;
+  background: rgba(245,158,11,.12);
+}
+.admin-table-wrap {
+  overflow: auto;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+}
+.admin-table th,
+.admin-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: right;
+  vertical-align: top;
+}
+.admin-table th {
+  color: #bfdbfe;
+  font-size: 13px;
+}
+.admin-table td span {
+  display: block;
+  color: #94a3b8;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.admin-table code {
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  font-size: 11px;
+}
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+@media (max-width: 720px) {
+  .user-access-panel {
+    display: grid;
+  }
+  .user-access-panel__actions,
+  .auth-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .user-access-panel__actions .btn,
+  .auth-actions .btn {
+    width: 100%;
+  }
+}

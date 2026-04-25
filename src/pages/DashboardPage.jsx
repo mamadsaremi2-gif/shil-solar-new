@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useProjectStore } from "../app/store/projectStore";
 import { PUBLIC_ASSETS } from "../shared/constants/publicAssets";
 import { ShareActions } from "../shared/components/ShareActions";
 import { CONTACT_LINKS } from "../shared/constants/contactLinks";
+import { useAuth } from "../features/auth/AuthProvider";
 
 function statusLabel(status) {
   switch (status) {
@@ -44,7 +46,9 @@ function QuickAction({ title, icon, onClick }) {
 }
 
 export function DashboardPage() {
-  const { projects, startNewProject, openProject, openWorkspace, openEquipmentLibrary, openContact, deleteProject } = useProjectStore();
+  const { projects, startNewProject, openProject, openWorkspace, openEquipmentLibrary, openContact, openAdmin, deleteProject, syncCloudProjects } = useProjectStore();
+  const { profile, isAdmin, user, signOut, isConfigured } = useAuth();
+  const [syncMessage, setSyncMessage] = useState("");
   const calculatedCount = projects.filter((project) => (project.versions?.length ?? 0) > 0).length;
   const draftCount = projects.length - calculatedCount;
   const versionCount = projects.reduce((sum, project) => sum + (project.versions?.length ?? 0), 0);
@@ -55,7 +59,7 @@ export function DashboardPage() {
         <div className="dashboard-nav__brand">
           <img src={PUBLIC_ASSETS.branding.logo} alt="SHIL IRAN" />
           <div>
-            <strong>Solar Design Suite</strong>
+            <strong>SHIL SOLAR</strong>
             <span>طراحی هوشمند سیستم‌های خورشیدی</span>
           </div>
         </div>
@@ -63,6 +67,8 @@ export function DashboardPage() {
           <button type="button" className="is-active">داشبورد</button>
           <button type="button" onClick={() => openEquipmentLibrary("dashboard")}>کتابخانه تجهیزات</button>
           <button type="button" onClick={() => openContact("dashboard")}>ارتباط با ما</button>
+          {isAdmin ? <button type="button" onClick={openAdmin}>مدیریت</button> : null}
+          <button type="button" onClick={signOut}>خروج</button>
         </nav>
       </header>
 
@@ -74,8 +80,8 @@ export function DashboardPage() {
           <img src={PUBLIC_ASSETS.branding.appLogo} alt="Solar Design Suite" />
         </div>
         <div className="dashboard-hero-xl__content">
-          <span className="eyebrow">Solar Design Suite</span>
-          <h1>طراحی مهندسی<br /><span>سیستم‌های خورشیدی</span></h1>
+          <span className="eyebrow">SHIL SOLAR</span>
+          <h1>SHIL SOLAR<br /><span>مهندسی انرژی خورشیدی</span></h1>
           <p>
             پروژه‌ها را هوشمند طراحی کنید، دقیق محاسبه کنید و نسخه‌های مهندسی را حرفه‌ای مدیریت کنید.
           </p>
@@ -84,6 +90,23 @@ export function DashboardPage() {
             <button className="btn btn--ghost" onClick={() => openEquipmentLibrary("dashboard")}>کتابخانه تجهیزات</button>
             <button className="btn btn--ghost" onClick={() => openContact("dashboard")}>ارتباط مستقیم</button>
           </div>
+        </div>
+      </section>
+
+      <section className="panel user-access-panel">
+        <div>
+          <span className="eyebrow">SHIL SOLAR Account</span>
+          <h2>{profile?.full_name || profile?.email || "کاربر برنامه"}</h2>
+          <p>{isConfigured ? "دسترسی شما توسط مدیر تأیید شده است و پروژه‌ها می‌توانند با سرور همگام شوند." : "حالت تست محلی فعال است؛ برای نسخه عمومی، Supabase را تنظیم کنید."}</p>
+        </div>
+        <div className="user-access-panel__actions">
+          <button className="btn btn--secondary" type="button" onClick={async () => {
+            setSyncMessage("در حال همگام‌سازی...");
+            const result = await syncCloudProjects(user?.id);
+            setSyncMessage(result.ok ? "همگام‌سازی انجام شد." : result.message || "همگام‌سازی انجام نشد.");
+          }}>همگام‌سازی پروژه‌ها با سرور</button>
+          {isAdmin ? <button className="btn btn--primary" type="button" onClick={openAdmin}>پنل مدیریت</button> : null}
+          {syncMessage ? <span className="badge">{syncMessage}</span> : null}
         </div>
       </section>
 
